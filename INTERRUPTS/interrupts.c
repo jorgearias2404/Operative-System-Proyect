@@ -1,8 +1,7 @@
 #include "interrupts.h"
-#include "logger.h"
-#include "registers.h"
+#include "../LOGGER/logger.h"  // Asegúrate de que esté
+#include "../REGISTERS/registers.h"
 #include <stdlib.h>
-
 static InterruptHandler interrupt_vector[9];
 static int pending_interrupts[9] = {0};
 

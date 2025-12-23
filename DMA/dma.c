@@ -2,12 +2,12 @@
 #include "../MEMORY/memory.h"
 #include "../DISK/disk.h"
 #include "../INTERRUPTS/interrupts.h"
-#include "../LOGGER/logger.h"
+#include "../LOGGER/logger.h"  // Asegúrate de que esté
+#include "../types.h"          // Añade esto
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
 DMA_Controller dma;
 
 // Función auxiliar para leer del disco usando DMA
