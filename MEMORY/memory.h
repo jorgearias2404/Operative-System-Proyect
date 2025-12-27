@@ -14,6 +14,7 @@ Word read_memory(int address);  // Devuelve Word, no int
 void write_memory(int address, Word word);
 bool is_valid_address(int address, bool is_kernel_mode);
 void dump_memory(int start, int end);
+void set_memory_region(int base, int limit);
 
 extern Word memory[MEMORY_SIZE];
 

@@ -31,6 +31,7 @@ void init_dma();
 void dma_set_memory_address(int address);
 void dma_set_disk_location(int track, int cylinder, int sector);
 void dma_set_io_operation(int operation);
+void dma_set_transfer_size(int size);  // <-- ¡AÑADE ESTA LÍNEA FALTANTE!
 void dma_start_transfer();
 void dma_wait_completion();
 int dma_get_status();

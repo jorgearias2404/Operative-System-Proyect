@@ -20,7 +20,8 @@ typedef enum {
     CMD_DISK,
     CMD_HELP,
     CMD_EXIT,
-    CMD_UNKNOWN
+    CMD_UNKNOWN,
+    CMD_LOAD
 } ConsoleCommand;
 
 // Estructura para parsear comandos
