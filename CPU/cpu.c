@@ -3,11 +3,12 @@
 #include "../REGISTERS/registers.h"
 #include "../INTERRUPTS/interrupts.h"
 #include "../DMA/dma.h"
-#include "../LOGGER/logger.h"  // Asegúrate de que esté
+#include "../LOGGER/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 CPU_State cpu_state = CPU_HALTED;
 
 void init_cpu() {
@@ -25,11 +26,12 @@ Instruction fetch_instruction() {
     Instruction instr;
     
     // Fase FETCH
-    cpu_registers.MAR = int_to_word(cpu_registers.PSW.PC);
+    cpu_registers.MAR = int_to_word(cpu_registers.PSW.PC_psw);  // CAMBIADO
     int mar_value = word_to_int(cpu_registers.MAR);
     cpu_registers.MDR = read_memory(mar_value);
     cpu_registers.IR = cpu_registers.MDR;
-    cpu_registers.PSW.PC++;
+    cpu_registers.PSW.PC_psw++;  // CAMBIADO
+    set_PC_int(cpu_registers.PSW.PC_psw);  // NUEVO
     
     log_event(LOG_DEBUG, "FETCH: PC=%d, Instrucción=%s", 
               mar_value, cpu_registers.IR.data);
@@ -134,7 +136,8 @@ void execute_instruction(Instruction instr) {
             break;
             
         case 27: // j (salto incondicional)
-            cpu_registers.PSW.PC = instr.effective_address;
+            cpu_registers.PSW.PC_psw = instr.effective_address;  // CAMBIADO
+            set_PC_int(instr.effective_address);  // NUEVO
             break;
             
         case 13: // svc
@@ -156,7 +159,8 @@ CPU_State get_cpu_state() {
 }
 
 void execute_program(int start_address) {
-    cpu_registers.PSW.PC = start_address;
+    cpu_registers.PSW.PC_psw = start_address;  // CAMBIADO
+    set_PC_int(start_address);  // NUEVO
     cpu_state = CPU_RUNNING;
     
     while (cpu_state == CPU_RUNNING) {
@@ -182,7 +186,8 @@ void handle_compare_operation(AddressingMode mode, int value, int effective_addr
 void handle_conditional_jump(int opcode, int address) {
     // Implementación simple
     if (opcode >= 9 && opcode <= 12) {
-        cpu_registers.PSW.PC = address;
+        cpu_registers.PSW.PC_psw = address;  // CAMBIADO
+        set_PC_int(address);  // NUEVO
     }
 }
 
@@ -195,7 +200,10 @@ void handle_register_operation(int opcode) {
 }
 
 void handle_jump_operation(int opcode, int address) {
-    execute_instruction((Instruction){opcode, ADDR_DIRECT, address, address});
+    if (opcode == 27 || (opcode >= 9 && opcode <= 12)) {
+        cpu_registers.PSW.PC_psw = address;  // CAMBIADO
+        set_PC_int(address);  // NUEVO
+    }
 }
 
 void handle_io_operation(int opcode) {

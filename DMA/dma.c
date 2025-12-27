@@ -2,27 +2,47 @@
 #include "../MEMORY/memory.h"
 #include "../DISK/disk.h"
 #include "../INTERRUPTS/interrupts.h"
-#include "../LOGGER/logger.h"  // Asegúrate de que esté
-#include "../types.h"          // Añade esto
+#include "../LOGGER/logger.h"
+#include "../types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#define DMA_SLEEP(ms) Sleep(ms)
+#else
+#define DMA_SLEEP(ms) usleep(ms * 1000)
+#endif
+
 DMA_Controller dma;
 
 // Función auxiliar para leer del disco usando DMA
 static void dma_disk_read(int track, int cylinder, int sector, char* buffer) {
-    // Implementación simple - en realidad deberías usar las funciones del disco
-    // Por ahora, simulamos lectura
-    char temp[SECTOR_SIZE];
-    snprintf(temp, SECTOR_SIZE, "T%02dC%02dS%03d", track, cylinder, sector);
+    // Asegurar límites
+    track = track % 100;
+    cylinder = cylinder % 100;
+    sector = sector % 1000;
+    
+    char temp[32];
+    snprintf(temp, sizeof(temp), "T%02dC%02dS%03d", track, cylinder, sector);
+    
+    // Copiar solo 8 caracteres (tamaño de Word)
     strncpy(buffer, temp, 8);
+    buffer[8] = '\0';
+    
+    log_event(LOG_DEBUG, "DMA: Leído disco T=%d,C=%d,S=%d -> %s", 
+              track, cylinder, sector, buffer);
 }
 
 // Función auxiliar para escribir en disco usando DMA
 static void dma_disk_write(int track, int cylinder, int sector, const char* data) {
-    // Implementación simple - en realidad deberías usar las funciones del disco
-    // Por ahora, solo logueamos
+    // Asegurar límites
+    track = track % 100;
+    cylinder = cylinder % 100;
+    sector = sector % 1000;
+    
     log_event(LOG_DEBUG, "DMA: Escribiendo en disco T=%d,C=%d,S=%d: %s", 
               track, cylinder, sector, data);
 }
@@ -39,7 +59,7 @@ static void* transfer_thread(void* arg) {
     // Simular tiempo de transferencia
     for (int i = 0; i < dma.bytes_to_transfer; i++) {
         if (dma.io_operation == 0) {  // Lectura: disco -> memoria
-            char buffer[SECTOR_SIZE];
+            char buffer[9];  // 8 + null
             dma_disk_read(dma.disk_track, dma.disk_cylinder, 
                          dma.disk_sector + i, buffer);
             
@@ -64,7 +84,7 @@ static void* transfer_thread(void* arg) {
             if (dma.memory_address + i < MEMORY_SIZE) {
                 Word data_word = read_memory(dma.memory_address + i);
                 
-                char buffer[SECTOR_SIZE];
+                char buffer[9];
                 strncpy(buffer, data_word.data, 8);
                 buffer[8] = '\0';
                 
@@ -82,7 +102,7 @@ static void* transfer_thread(void* arg) {
         }
         
         // Pequeña pausa para simular tiempo real
-        usleep(1000);  // 1ms por byte/sector
+        DMA_SLEEP(1);  // 1ms por byte/sector
     }
     
     if (dma.state != DMA_ERROR) {
@@ -183,7 +203,7 @@ void dma_start_transfer() {
     // No hacemos join aquí para que sea asíncrono
     pthread_detach(dma.thread);
     
-    log_event(LOG_INFO, "DMA: Transferencia iniciada (asíncrona)");
+    log_event(LOG_INFO, "DMA: Transferencia iniciada (asíncrono)");
 }
 
 void dma_wait_completion() {
