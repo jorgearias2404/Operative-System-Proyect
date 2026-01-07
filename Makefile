@@ -1,42 +1,47 @@
-# Makefile para Windows con MinGW
+# Makefile que funciona seguro
 CC = gcc
-CFLAGS = -Wall -std=c99 -g -pthread -I. -ICONSOLE -ICPU -IDISK -IDMA -IINTERRUPTS -ILOGGER -IMEMORY -IREGISTERS
+CFLAGS = -Wall -std=c99 -g -I.
 TARGET = sistema.exe
 
-# Todos los archivos .c
-SRCS = main.c \
-       CONSOLE/console.c \
-       CPU/cpu.c \
-       DISK/disk.c \
-       DMA/dma.c \
-       INTERRUPTS/interrupts.c \
-       LOGGER/logger.c \
-       MEMORY/memory.c \
-       REGISTERS/registers.c
+all: sistema.exe
 
-# Todos los archivos .o
-OBJS = $(SRCS:.c=.o)
+sistema.exe: main.o console.o cpu.o disk.o dma.o interrupts.o logger.o memory.o registers.o
+	$(CC) $(CFLAGS) -o sistema.exe main.o console.o cpu.o disk.o dma.o interrupts.o logger.o memory.o registers.o
 
-# Regla principal
-all: $(TARGET)
+main.o: main.c
+	$(CC) $(CFLAGS) -c main.c
 
-# Compilar ejecutable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
+console.o: CONSOLE/console.c
+	$(CC) $(CFLAGS) -c CONSOLE/console.c -o console.o
 
-# Regla genérica para .c -> .o
-.c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+cpu.o: CPU/cpu.c
+	$(CC) $(CFLAGS) -c CPU/cpu.c -o cpu.o
 
-# Limpiar
+disk.o: DISK/disk.c
+	$(CC) $(CFLAGS) -c DISK/disk.c -o disk.o
+
+dma.o: DMA/dma.c
+	$(CC) $(CFLAGS) -c DMA/dma.c -o dma.o
+
+interrupts.o: INTERRUPTS/interrupts.c
+	$(CC) $(CFLAGS) -c INTERRUPTS/interrupts.c -o interrupts.o
+
+logger.o: LOGGER/logger.c
+	$(CC) $(CFLAGS) -c LOGGER/logger.c -o logger.o
+
+memory.o: MEMORY/memory.c
+	$(CC) $(CFLAGS) -c MEMORY/memory.c -o memory.o
+
+registers.o: REGISTERS/registers.c
+	$(CC) $(CFLAGS) -c REGISTERS/registers.c -o registers.o
+
 clean:
-	del /Q $(TARGET) $(OBJS) system.log 2>nul
+	@echo Limpiando...
+	@if exist sistema.exe del sistema.exe
+	@if exist *.o del *.o
+	@echo Hecho.
 
-# Ayuda
-help:
-	@echo Comandos:
-	@echo   make      - Compilar
-	@echo   make clean - Limpiar
-	@echo   sistema.exe - Ejecutar
+run: sistema.exe
+	sistema.exe
 
-.PHONY: all clean help
+.PHONY: all clean run

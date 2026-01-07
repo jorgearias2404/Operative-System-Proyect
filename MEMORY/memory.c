@@ -12,7 +12,7 @@
 #include "memory.h"
 
 /* Inclusión de cabeceras de otros módulos */
-#include "logger.h"                  // Para registrar eventos de memoria
+#include "../LOGGER/logger.h"                  // Para registrar eventos de memoria
 #include "../REGISTERS/registers.h"  // Para acceder a registros RB y RL
 #include "../INTERRUPTS/interrupts.h" // Para disparar interrupciones por violaciones
 
